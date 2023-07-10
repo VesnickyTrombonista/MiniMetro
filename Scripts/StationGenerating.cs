@@ -16,7 +16,7 @@ public class StationGenerating : MonoBehaviour
     // defining the place for the stations
     private (float x, float y) centre = (0f, 0f); // later -> centre of the list
     private float sorroundings;
-    private float scaling = 3f;
+    public float scaling = 0.6f;
     public float distanceFromOthers = 2f;
     public int defaultWeeksForStations = 3;
 
@@ -64,8 +64,9 @@ public class StationGenerating : MonoBehaviour
         GameObject newStation = Instantiate(stations[name].gameObject, Vector3.zero, Quaternion.identity, stationsList);
         newStation.transform.localScale = new Vector3(scaleX, scaleY, 0f);
         Vector3 position = GetRandomPosition();
-        // position = CheckValidPosition(position, stationsList);
+        position = CheckValidPosition(position, stationsList);
         newStation.transform.localPosition = position;
+        newStation.GetComponent<Station>().name = name;
         stationsQueues.Add(newStation.GetComponent<Station>());
     }
     /// <summary>
@@ -74,8 +75,8 @@ public class StationGenerating : MonoBehaviour
     /// <returns>A random position.</returns>
     Vector3 GetRandomPosition()
     {
-        float randomX = Random.Range(0 - borderX, 0 + borderX);
-        float randomY = Random.Range(0 - borderY, 0 + borderY);
+        float randomX = Random.Range(0 - borderX * scaling, 0 + borderX * scaling);
+        float randomY = Random.Range(0 - borderY * scaling, 0 + borderY * scaling);
 
         return new Vector3(randomX, randomY, 0f);
     }

@@ -218,20 +218,28 @@ public class TimePlanning : MonoBehaviour
         people.Add("square", peopleTransform.GetChild(5));
         people.Add("circle", peopleTransform.GetChild(6));
     }
-    /* public string AddTransportedPassenger(string count, List<Station> stationsList)
+    public string AddTransportedPassenger(string count, List<Station> stationsList)
     {
-        int newCount = 0;
+        int newCount;
         string name;
-        foreach (string station in stations.Keys)
+        int peopleCount = 0;
+        foreach (Station station in stationsList)
         {
-            name = station;
+            name = station.name;
+            List<GameObject>.Enumerator copy = station.passengerQueue.GetEnumerator();
+            GameObject person;
+            while ((person = copy.Current) is not null)
+            {
+                copy.MoveNext();
+                if (person.name == name)
+                {
+                    peopleCount += 1;
+                    station.passengerQueue.Remove(person); // that concrete passenger
+                    Destroy(person);
+                }
+            }
         }
-        if (stationsList[].passengerQueue.Contains())
-        {
-            .Dequeue(); // that concrete passenger
-            newCount = Int32.Parse(count.ToString()) + 1;
-
-        }
+        newCount = Int32.Parse(count) + peopleCount;
         return newCount.ToString();
-    } */
+    }
 }

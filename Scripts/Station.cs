@@ -8,8 +8,9 @@ using static UnityEngine.Rendering.DebugUI.Table;
 
 public class Station : MonoBehaviour
 {
-    public Queue<GameObject> passengerQueue = new Queue<GameObject>();
+    public List<GameObject> passengerQueue = new List<GameObject>();
     public Transform visibleQueue;
+    public string stationName;
     private int capacityWithNoWaiting = 6;
     private int maximalCapacity = 20;
 
@@ -41,7 +42,7 @@ public class Station : MonoBehaviour
     }
     public void AddPassenger(GameObject passenger)
     {
-        passengerQueue.Enqueue(passenger);
+        passengerQueue.Add(passenger);
         GameObject person = Instantiate(passenger.gameObject, visibleQueue.transform);
         float xPos = passengerQueue.Count * spacing;
         person.transform.position = new Vector3(xPos, 0f, 0f);
@@ -51,7 +52,8 @@ public class Station : MonoBehaviour
     {
         if (passengerQueue.Count > 0)
         {
-            GameObject passenger = passengerQueue.Dequeue();
+           GameObject passenger = passengerQueue.ToArray()[0];
+           passengerQueue.Remove(passenger);
         }
     }
 }
