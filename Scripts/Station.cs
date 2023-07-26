@@ -9,6 +9,8 @@ using static UnityEngine.Rendering.DebugUI.Table;
 public class Station : MonoBehaviour
 {
     public List<GameObject> passengerQueue = new List<GameObject>();
+    public StationGenerating generator;
+    public TimePlanning planner;
     public Transform visibleQueue;
     public string stationName;
     private int capacityWithNoWaiting = 6;
@@ -18,13 +20,19 @@ public class Station : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        generator = new StationGenerating();
+        // AddComponent
+        planner = new TimePlanning();
     }
     // Update is called once per frame
     void Update()
     {
         CheckWaitingPeople();
     }
+    /* void OnCollision()
+    {
+        generator.transform.localPosition = Vector3.zero + generator.CheckValidPosition(generator.transform.localPosition, planner.stationsGeneratedList);
+    }*/
 
     /// <summary>
     /// Checks the count of the waiting people in the queue and performs actions: timer or game over.

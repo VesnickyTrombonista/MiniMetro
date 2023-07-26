@@ -28,7 +28,7 @@ public class TimePlanning : MonoBehaviour
     private bool scrollerIsUpdated = false;
     public float weekDuration = 60f;
     private float currentTimeInWeek;
-    private int currentWeek = 0;
+    public float currentWeek = 0;
     private int firstFastPeriod = 5;
 
     // slider & generating

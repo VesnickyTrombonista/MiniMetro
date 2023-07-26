@@ -6,18 +6,20 @@ using Unity.VisualScripting;
 using UnityEditor;
 using UnityEditor.ShaderGraph.Internal;
 using UnityEngine;
+using System;
 using static System.Collections.Specialized.BitVector32;
 using static UnityEngine.Rendering.CoreUtils;
 
 public class StationGenerating : MonoBehaviour
 {
     Camera mainCamera;
-
+    public GameObject info;
+    // TimePlanning planner; // pøiøadit v unity
     // defining the place for the stations
     private (float x, float y) centre = (0f, 0f); // later -> centre of the list
-    private float sorroundings;
+    private float sorroundings = 1.05f;
     public float scaling = 0.02f;
-    public float distanceFromOthers = 40f;
+    public float distanceFromOthers = 200f;
     public int defaultWeeksForStations = 3;
 
     // scaling of the station
@@ -42,7 +44,7 @@ public class StationGenerating : MonoBehaviour
     // Start is called before the first frame update
     private void Start()                        
     {                                           
-        mainCamera = Camera.main;               
+        mainCamera = Camera.main;
         sorroundings = mainCamera.orthographicSize * scaling;
     }
 
@@ -60,19 +62,17 @@ public class StationGenerating : MonoBehaviour
     /// <param name="stationsList">The parent transform of the stations list.</param>
     /// <param name="currentWeek">The current week of the game.</param>
     /// <param name="stationsQueues">A list of stations with their passengers queues.</param>
-    public void GenerateStation(Dictionary<string, Transform> stations, Transform stationsList, int currentWeek, List<Station> stationsQueues)
+    public void GenerateStation(Dictionary<string, Transform> stations, Transform stationsList, float currentWeek, List<Station> stationsQueues)
     {
         string name = GetStationName(stationsNames, currentWeek);
         if (!alreadySpawnedStationsTypes.Contains(name))
         {
             alreadySpawnedStationsTypes.Add(name);
         }
-        // position = position + stationsList.GetComponent<Canvas>().transform.position;
         GameObject newStation = Instantiate(stations[name].gameObject, Vector3.zero, Quaternion.identity, stationsList);
         newStation.transform.localScale = new Vector3(scaleX, scaleY, 0f);
         Vector3 position = GetPositionInCentre(stationsList);
         newStation.transform.localPosition = Vector3.zero + position; 
-        // not loaded.?, previous tries Unity maybe added not to zero, but to random vector
         newStation.GetComponent<Station>().name = name;
         stationsQueues.Add(newStation.GetComponent<Station>());
     }
@@ -81,21 +81,38 @@ public class StationGenerating : MonoBehaviour
     {
         float sizeX = cameraScaleX + scaling;
         float sizeY = cameraScaleY + scaling;
+        sizeX = sorroundings * sizeX;
+        sizeY = sorroundings * sizeY;
+        // sizeX = GetFloatBitFarFromCentre(sizeX);
+        // sizeY = GetFloatBitFarFromCentre(sizeY);
         float randomX = UnityEngine.Random.Range(- sizeX, sizeX);
         float randomY = UnityEngine.Random.Range(- sizeY, sizeY);
+
+        
         Vector3 position = new Vector3(randomX, randomY, 0);
         position = CheckValidPosition(position, stationsList);
         return position;
     }
-
+    private float GetFloatBitFarFromCentre(float number)
+    {
+        if (number > 0)
+        {
+            number += scaling * info.GetComponent<TimePlanning>().currentWeek;
+        }
+        else if(number < 0)
+        {
+            number -= scaling *  info.GetComponent<TimePlanning>().currentWeek;
+        }
+        return number;
+    }
     /// <summary>
     /// Generates a random position within the specified surroundings around the centre point.
     /// </summary>
     /// <returns>A random position.</returns>
     Vector3 GetRandomPosition()
     {
-        float randomX = Random.Range(0 - borderX * scaling, 0 + borderX * scaling);
-        float randomY = Random.Range(0 - borderY * scaling, 0 + borderY * scaling);
+        float randomX = UnityEngine.Random.Range(0 - borderX * scaling, 0 + borderX * scaling);
+        float randomY = UnityEngine.Random.Range(0 - borderY * scaling, 0 + borderY * scaling);
         Vector3 position = new Vector3(randomX, randomY, 0f);
         return position;
     }
@@ -105,9 +122,9 @@ public class StationGenerating : MonoBehaviour
     /// <param name="stations">An array of station names.</param>
     /// <param name="currentWeek">The current week of the game.</param>
     /// <returns>A randomly selected station name.</returns>
-    private string GetStationName(string[] stations, int currentWeek)
+    private string GetStationName(string[] stations, float currentWeek)
     {
-        int index;
+        float index;
         if (currentWeek < defaultWeeksForStations)
         {
             index = UnityEngine.Random.Range(0, defaultWeeksForStations);
@@ -116,7 +133,7 @@ public class StationGenerating : MonoBehaviour
         {
             index = UnityEngine.Random.Range(0, stations.Length);
         }
-        return stations[index];
+        return stations[(int)index];
     }
     /// <summary>
     /// Checks if the given position is valid by performing a sphere overlap check with other colliders.
@@ -124,7 +141,7 @@ public class StationGenerating : MonoBehaviour
     /// </summary>
     /// <param name="position">The position to check for validity.</param>
     /// <returns>A valid position that does not overlap with other colliders.</returns>
-    private Vector3 CheckValidPosition(Vector3 position, Transform stationList)
+    public Vector3 CheckValidPosition(Vector3 position, Transform stationList)
     {
         Collider[] colliders = Physics.OverlapSphere(position, distanceFromOthers);
         if (colliders.Length > 0)
