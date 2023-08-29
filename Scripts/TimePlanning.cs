@@ -14,13 +14,13 @@ public class TimePlanning : MonoBehaviour
     public Slider slider;
 
     public Transform stationsGeneratedList;
-    private StationGenerating stationGenerator;
+    //private StationGenerating stationGenerator;
     public Transform stationsTransform;
     private Dictionary<string, Transform> stations = new Dictionary<string, Transform>(7);
     List<string> alredySpawnedStationsTypes = new List<string>();
     List<Station> stationsQueues = new List<Station>();
 
-    private PeopleGenerating peopleGenerator;
+    //private PeopleGenerating peopleGenerator;
     public Transform peopleTransform;
     private Dictionary<string, Transform> people = new Dictionary<string, Transform>(7);
 
@@ -59,16 +59,26 @@ public class TimePlanning : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        stationGenerator = new StationGenerating();
-        peopleGenerator = new PeopleGenerating();
+        this.AddComponent<StationGenerating>();
+        // stationGenerator = new StationGenerating();
+        this.AddComponent<PeopleGenerating>();
+        //peopleGenerator = new PeopleGenerating();
         SetSpawningProperty();
         SetDefaultTimer();
         SetCameraDefaultProperty();
         GetStationsIntoDictionary();
         GetPeopleIntoDictionary();
         totalPassengersCount.text = "0";
+        // generete three independent station on three default places for making sense to transport people from the beginning
+        //GenerateThreeInitStations();
     }
-
+    public void GenerateThreeInitStations()
+    {
+        this.GetComponent<StationGenerating>().GenerateStation(stations, stationsGeneratedList, currentWeek, stationsQueues);
+        this.GetComponent<StationGenerating>().GenerateStation(stations, stationsGeneratedList, currentWeek, stationsQueues);
+        this.GetComponent<StationGenerating>().GenerateStation(stations, stationsGeneratedList, currentWeek, stationsQueues);
+        sliderValueForGeneratingNextStation = 3 * sliderPercentageForSpawningStation;
+    }
     // Update is called once per frame
     void Update()
     {
@@ -85,11 +95,11 @@ public class TimePlanning : MonoBehaviour
             if (stationsGeneratedList.childCount > 0)
             {
                 // in future: async?
-                alredySpawnedStationsTypes = stationGenerator.alreadySpawnedStationsTypes;
+                alredySpawnedStationsTypes = this.GetComponent<StationGenerating>().alreadySpawnedStationsTypes;
                 for (int i = 0; i < stationsGeneratedList.childCount; i++)
                 {
                     Transform station = stationsGeneratedList.GetChild(i);
-                    peopleGenerator.GeneratePerson(people, station, station.GetChild(0), alredySpawnedStationsTypes); 
+                    this.GetComponent<PeopleGenerating>().GeneratePerson(people, station, station.GetChild(0), alredySpawnedStationsTypes); 
                     // station.GetChild(0) = peopleQueue
                 }
             }
@@ -100,7 +110,7 @@ public class TimePlanning : MonoBehaviour
         if (slider.value >= sliderValueForGeneratingNextStation)
         {
 
-            stationGenerator.GenerateStation(stations, stationsGeneratedList, currentWeek, stationsQueues);
+            this.GetComponent<StationGenerating>().GenerateStation(stations, stationsGeneratedList, currentWeek, stationsQueues);
 
             sliderValueForGeneratingNextStation += sliderPercentageForSpawningStation;
 
@@ -109,7 +119,7 @@ public class TimePlanning : MonoBehaviour
         {
             if (newCameraSize - cameraSize > 2 * currentScrollAmount) // scrolling is slow
             {
-                ChangeCameraSizeContinuosly(0.25f * scrollingSmoothness);
+                ChangeCameraSizeContinuosly(0.5f * scrollingSmoothness);
             }
             else
             {
@@ -218,6 +228,12 @@ public class TimePlanning : MonoBehaviour
         people.Add("square", peopleTransform.GetChild(5));
         people.Add("circle", peopleTransform.GetChild(6));
     }
+    /// <summary>
+    /// Increases the count of transported passengers from a station's queue to the given count and returns the updated count.
+    /// </summary>
+    /// <param name="count">The current count of transported passengers.</param>
+    /// <param name="stationsList">A list of stations to check for passengers.</param>
+    /// <returns>The updated count of transported passengers after adding passengers from the station queues.</returns>
     public string AddTransportedPassenger(string count, List<Station> stationsList)
     {
         int newCount;

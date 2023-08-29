@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using static UnityEngine.Rendering.DebugUI.Table;
 
@@ -20,9 +21,10 @@ public class Station : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        generator = new StationGenerating();
-        // AddComponent
-        planner = new TimePlanning();
+        //generator = new StationGenerating();
+        //planner = new TimePlanning();
+        this.AddComponent<StationGenerating>();
+        this.AddComponent<TimePlanning>();
     }
     // Update is called once per frame
     void Update()
@@ -48,6 +50,10 @@ public class Station : MonoBehaviour
             // gameover    
         }
     }
+    /// <summary>
+    /// Adds a passenger to the station's queue and instantiates a new person object in the visible queue.
+    /// </summary>
+    /// <param name="passenger">The GameObject representing the passenger to be added.</param>
     public void AddPassenger(GameObject passenger)
     {
         passengerQueue.Add(passenger);
@@ -55,13 +61,15 @@ public class Station : MonoBehaviour
         float xPos = passengerQueue.Count * spacing;
         person.transform.position = new Vector3(xPos, 0f, 0f);
     }
-
+    /// <summary>
+    /// Remove passenger from the queue.
+    /// </summary>
     public void ProcessNextCustomer()
     {
         if (passengerQueue.Count > 0)
         {
-           GameObject passenger = passengerQueue.ToArray()[0];
-           passengerQueue.Remove(passenger);
+            GameObject passenger = passengerQueue.ToArray()[0];
+            passengerQueue.Remove(passenger);
         }
     }
 }

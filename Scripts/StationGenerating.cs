@@ -9,6 +9,7 @@ using UnityEngine;
 using System;
 using static System.Collections.Specialized.BitVector32;
 using static UnityEngine.Rendering.CoreUtils;
+using UnityEngine.UIElements;
 
 public class StationGenerating : MonoBehaviour
 {
@@ -16,7 +17,7 @@ public class StationGenerating : MonoBehaviour
     public GameObject info;
     // TimePlanning planner; // pøiøadit v unity
     // defining the place for the stations
-    private (float x, float y) centre = (0f, 0f); // later -> centre of the list
+    //private (float x, float y) centre = (0f, 0f); // later -> centre of the list
     private float sorroundings = 1.05f;
     public float scaling = 0.02f;
     public float distanceFromOthers = 200f;
@@ -26,26 +27,37 @@ public class StationGenerating : MonoBehaviour
     private float scaleX = 0.025f;
     private float scaleY = 0.045f;
 
-    private float cameraScaleX = 0.06f;
-    private float cameraScaleY = 0.03f;
+    private float cameraScaleX = 0.057f;
+    private float cameraScaleY = 0.025f;
 
     // values for border
-    private float borderXOld = 37f;
-    private float borderYOld = 19f;
+    //private float borderXOld = 37f;
+    //private float borderYOld = 19f;
 
     // values for border
     private float borderX = 0.45f;
     private float borderY = 0.45f;
 
-    private float alpha = 1.3f;
-    public string[] stationsNames = new string[7]{ "circle", "square", "triangle", "hexagon", "rectangular", "pentagon", "star"};
+    private float alpha; // = 1.3f;
+    public string[] stationsNames = new string[7] { "circle", "square", "triangle", "hexagon", "rectangular", "pentagon", "star" };
     public List<string> alreadySpawnedStationsTypes = new List<string>();
+
+    public List<Vector3> initPositions = new List<Vector3>();
+    public List<int> randomNumbers = new List<int>();
+    private int initStation = 0;
 
     // Start is called before the first frame update
     private void Start()                        
     {                                           
         mainCamera = Camera.main;
         sorroundings = mainCamera.orthographicSize * scaling;
+        Vector3 positionA = new Vector3 (1.5f, 1, 0);
+        initPositions.Add(positionA);
+        Vector3 positionB = new Vector3(-2.5f, 0.5f, 0);
+        initPositions.Add(positionB);
+        Vector3 positionC = new Vector3(2f, -1, 0);
+        initPositions.Add(positionC);
+        randomNumbers = GetShuffledNumbers();
     }
 
     // Update is called once per frame
@@ -72,11 +84,50 @@ public class StationGenerating : MonoBehaviour
         GameObject newStation = Instantiate(stations[name].gameObject, Vector3.zero, Quaternion.identity, stationsList);
         newStation.transform.localScale = new Vector3(scaleX, scaleY, 0f);
         Vector3 position = GetPositionInCentre(stationsList);
-        newStation.transform.localPosition = Vector3.zero + position; 
+        newStation.transform.localPosition = Vector3.zero + position;
+        newStation.GetComponent<Station>().name = name;
+        stationsQueues.Add(newStation.GetComponent<Station>());
+    }
+    public void GenerateDefaultStation(string name, Dictionary<string, Transform> stations, Transform stationsList, float currentWeek, List<Station> stationsQueues)
+    {
+        if (!alreadySpawnedStationsTypes.Contains(name))
+        {
+            alreadySpawnedStationsTypes.Add(name);
+        }
+        GameObject newStation = Instantiate(stations[name].gameObject, Vector3.zero, Quaternion.identity, stationsList);
+        newStation.transform.localScale = new Vector3(scaleX, scaleY, 0f);
+        Vector3 position = GetInitPosition();
+        newStation.transform.localPosition = Vector3.zero + position;
         newStation.GetComponent<Station>().name = name;
         stationsQueues.Add(newStation.GetComponent<Station>());
     }
 
+
+    public Vector3 GetInitPosition()
+    {
+        int index = randomNumbers[initStation];
+        initStation++;
+        return initPositions[index];
+    }
+    public List<int> GetShuffledNumbers()
+    {
+        List<int> numbers = new List<int> { 0, 1, 2 };
+        List<int> shuffledNumbers = new List<int>();
+
+        while (numbers.Count > 0)
+        {
+            int index = UnityEngine.Random.Range(0, numbers.Count);
+            shuffledNumbers.Add(numbers[index]);
+            numbers.RemoveAt(index);
+        }
+
+        return numbers;
+    }
+    /// <summary>
+    /// Generates a random position within a specified area centered around the camera's view, considering scaling and surroundings.
+    /// </summary>
+    /// <param name="stationsList">The list of stations for checking position validity.</param>
+    /// <returns>A random position within the specified area.</returns>
     Vector3 GetPositionInCentre(Transform stationsList)
     {
         float sizeX = cameraScaleX + scaling;
@@ -93,6 +144,11 @@ public class StationGenerating : MonoBehaviour
         position = CheckValidPosition(position, stationsList);
         return position;
     }
+    /// <summary>
+    /// Adjusts the input number based on the current week's scaling factor.
+    /// </summary>
+    /// <param name="number">The number to be adjusted.</param>
+    /// <returns>The adjusted number according to current week's scaling.</returns>
     private float GetFloatBitFarFromCentre(float number)
     {
         if (number > 0)
@@ -106,7 +162,7 @@ public class StationGenerating : MonoBehaviour
         return number;
     }
     /// <summary>
-    /// Generates a random position within the specified surroundings around the centre point.
+    /// Generates a random position within the specified surroundings around the centre point. Use rather GetPositionInCentre
     /// </summary>
     /// <returns>A random position.</returns>
     Vector3 GetRandomPosition()
