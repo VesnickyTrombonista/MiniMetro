@@ -14,8 +14,7 @@ public class Station : MonoBehaviour
     public TimePlanning planner;
     public Transform visibleQueue;
     public string stationName;
-    private int capacityWithNoWaiting = 6;
-    private int maximalCapacity = 20;
+    
     public Vector3 centre;
     public float spacing = 0.01f;
     // Start is called before the first frame update
@@ -27,27 +26,12 @@ public class Station : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        CheckWaitingPeople();
     }
     /* void OnCollision()
     {
         generator.transform.localPosition = Vector3.zero + generator.CheckValidPosition(generator.transform.localPosition, planner.stationsGeneratedList);
     }*/
 
-    /// <summary>
-    /// Checks the count of the waiting people in the queue and performs actions: timer or game over.
-    /// </summary>
-    private void CheckWaitingPeople()
-    {
-        if (visibleQueue.childCount >= capacityWithNoWaiting)
-        {
-            // start timer of the station
-        }
-        if (visibleQueue.childCount >= maximalCapacity)
-        {
-            // gameover    
-        }
-    }
     /// <summary>
     /// Adds a passenger to the station's queue and instantiates a new person object in the visible queue.
     /// </summary>

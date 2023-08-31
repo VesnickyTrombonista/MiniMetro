@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
 using System.Xml.Schema;
 using TMPro;
@@ -27,7 +28,7 @@ public class TimePlanning : MonoBehaviour
 
     // for camera scrolling
     private bool scrollerIsUpdated = false;
-    private float weekDuration = 84f;
+    private float weekDuration = 7f; //84f
     private float currentTimeInWeek;
     public float currentWeek = 0;
     private int firstFastPeriod = 5;
@@ -60,6 +61,13 @@ public class TimePlanning : MonoBehaviour
     private float cameraSizeMax;
 
     public TextMeshProUGUI totalPassengersCount;
+
+    // checking peopleLimit
+    public float timeLeft;
+    private float enoughTime = 20f;
+    private int maximalCapacity = 20;
+    private bool criticalMode = false;
+    public GameObject countdownCount;
 
     // Awake is called when the script is initialized and when a Scene loads
     void Awake()
@@ -95,6 +103,12 @@ public class TimePlanning : MonoBehaviour
     void Update()
     {
         UpdateTimer();
+        CheckQueues();
+        if (criticalMode)
+        {
+            GameOverCountdown();
+        }
+        
         // totalPassengersCount.text = AddTransportedPassenger(totalPassengersCount.text, stationsQueues);
         if (slider.value == slider.maxValue)
         { // new week
@@ -193,6 +207,9 @@ public class TimePlanning : MonoBehaviour
         cameraSizeMax = 16f;
         scrollAmountSlow = scrollAmountFast / differenceOfScrolling;
         totalPassengersCount.text = "0";
+        timeLeft = enoughTime;
+        countdownCount.GetComponent<TextMeshProUGUI>().text = timeLeft.ToString();
+        
     }
     /// <summary>
     /// Sets the camera size based on the current week.
@@ -275,5 +292,40 @@ public class TimePlanning : MonoBehaviour
         }
         newCount = Int32.Parse(count) + peopleCount;
         return newCount.ToString();
+    }
+    public void CheckQueues()
+    {
+        for (int i = 0; i < stationsGeneratedList.childCount; i++)
+        {
+            if (stationsGeneratedList.GetChild(i).GetComponent<Station>().passengerQueue.Count > maximalCapacity)
+            {
+                if (criticalMode)
+                {
+                    continue;
+                }
+                criticalMode = true;
+                countdownCount.SetActive(true); // visible
+                break;
+            }
+            else
+            {
+                continue;
+            }
+        }
+        if (!criticalMode)
+        {
+            timeLeft = enoughTime;
+            countdownCount.SetActive(false); // not visible
+        }
+    }
+    public void GameOverCountdown()
+    {
+        timeLeft -= Time.deltaTime;
+        countdownCount.GetComponent<TextMeshProUGUI>().text = Mathf.Round(timeLeft).ToString();
+        if (timeLeft < 0)
+        {
+            // GameOver(); show endGame window
+            return;
+        }
     }
 }

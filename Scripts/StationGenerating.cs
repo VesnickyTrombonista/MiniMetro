@@ -17,13 +17,16 @@ public class StationGenerating : MonoBehaviour
     public static StationGenerating singletone;
     Camera mainCamera;
     public GameObject info;
+    public Transform river;
 
     // defining the place for the stations
     //private (float x, float y) centre = (0f, 0f); // later -> centre of the list
     private float surroundings = 1.05f;
+    private float scaleYGenarating = 1f;
     public float scaling = 0.02f;
     private float distanceFromOthers = 1f;
     public int defaultWeeksForStations = 3;
+    public float distanceFromRiver = 1f;
 
     // scaling of the station
     private float scaleX = 0.025f;
@@ -34,6 +37,9 @@ public class StationGenerating : MonoBehaviour
 
     private float cameraMaxX = 0.48f;
     private float cameraMaxY = 0.36f;
+
+    private float cameraScaleCheckX = 0.3f;
+    private float cameraScaleCheckY = 0.2f;
 
     // values for border
     //private float borderXOld = 37f;
@@ -138,7 +144,7 @@ public class StationGenerating : MonoBehaviour
         float x = GetFloatBitFarFromCentre(position.x);
         float y = GetFloatBitFarFromCentre(position.y);
         position.x = x;
-        position.y = y;
+        position.y = scaleYGenarating * y;
         position = CheckBorder(position);
         return position;
     }
@@ -161,7 +167,7 @@ public class StationGenerating : MonoBehaviour
     {
         float x = Math.Min(goodVector.x, badVector.x);
         float y = Math.Min(goodVector.y, badVector.y);
-        Vector3 mixedVector = new Vector3(x, y, goodVector.z);
+        Vector3 mixedVector = new Vector3(x, scaleYGenarating * y, goodVector.z);
         mixedVector = CheckBorder(mixedVector); 
         return mixedVector;
     }
@@ -202,13 +208,14 @@ public class StationGenerating : MonoBehaviour
     {
         float sizeX = cameraScaleX + scaling / 2f;
         float sizeY = cameraScaleY + scaling / 2f;
-        sizeX = GetHigherSize(sizeX, surroundings * sizeX);
-        sizeY = GetHigherSize(sizeY, surroundings * sizeY);
+        sizeX = GetHigherSize(sizeX, mainCamera.orthographicSize * surroundings * sizeX);
+        sizeY = GetHigherSize(sizeY, mainCamera.orthographicSize * scaleYGenarating * surroundings * sizeY);
         float randomX = UnityEngine.Random.Range(-sizeX, sizeX);
         float randomY = UnityEngine.Random.Range(-sizeY, sizeY);
 
-        Vector3 position = new Vector3(randomX, randomY, 0);
+        Vector3 position = new Vector3(mainCamera.orthographicSize * randomX, mainCamera.orthographicSize * randomY, 0);
         position = CheckValidPosition(position, stationsGeneratedList);
+        position = CheckStationDistanceFromRiver(position, river, distanceFromRiver);
         position = CheckBorder(position);
         return position;
     }
@@ -219,8 +226,14 @@ public class StationGenerating : MonoBehaviour
     /// <returns>The adjusted Vector3 position within the specified camera borders.</returns>
     private Vector3 CheckBorder(Vector3 position)
     {
-        position.x = Mathf.Clamp(position.x, - cameraMaxX, cameraMaxX);
-        position.y = Mathf.Clamp(position.y, - cameraMaxY, cameraMaxY);
+        float maxX = Math.Max(cameraMaxX, cameraScaleCheckX * mainCamera.orthographicSize);
+        float maxY = Math.Max(cameraMaxY, cameraScaleCheckY * mainCamera.orthographicSize);
+
+        position.x = Mathf.Clamp(position.x, - maxX, maxX);
+        position.y = Mathf.Clamp(position.y, - maxY, maxY);
+
+        position.x = Mathf.Clamp(position.x, -cameraMaxX, cameraMaxX);
+        position.y = Mathf.Clamp(position.y, -cameraMaxY, cameraMaxY);
         return position;
     }
     /// <summary>
@@ -265,7 +278,7 @@ public class StationGenerating : MonoBehaviour
     Vector3 GetRandomPosition()
     {
         float randomX = UnityEngine.Random.Range(0 - borderX * scaling, 0 + borderX * scaling);
-        float randomY = UnityEngine.Random.Range(0 - borderY * scaling, 0 + borderY * scaling);
+        float randomY = UnityEngine.Random.Range(0 - scaleYGenarating * borderY * scaling, 0 + scaleYGenarating * borderY * scaling);
         Vector3 position = new Vector3(randomX, randomY, 0f);
         return position;
     }
@@ -300,6 +313,7 @@ public class StationGenerating : MonoBehaviour
         if (colliders.Length > 0)
         {
             position = GetPositionInGame(stationsGeneratedList);
+            position = CheckStationDistanceFromRiver(position, river, distanceFromRiver);
             position = FinalCheckValidPosition(position, stationsGeneratedList);
         }
 
@@ -325,11 +339,29 @@ public class StationGenerating : MonoBehaviour
             {
                 position = GetPositionFartherInGame(position);
                 position = FinalCheckValidPosition(position, stationsGeneratedList);
+                position = CheckStationDistanceFromRiver(position, river, distanceFromRiver);
                 break;
             }
         }
 
         return position;
     }
+    public Vector3 CheckStationDistanceFromRiver(Vector3 position, Transform river, float minDistanceFromRiver)
+    {
+        Vector2[] riverPoints = river.GetComponent<EdgeCollider2D>().points;
+
+        foreach (Vector3 riverPoint in riverPoints)
+        {
+            float distance = Vector2.Distance(position, riverPoint);
+            if (distance < minDistanceFromRiver)
+            {
+                Vector3 riverDirection = (position - riverPoint).normalized;
+                position += riverDirection * (minDistanceFromRiver - distance);
+            }
+        }
+
+        return position;
+    }
+    
 
 }
