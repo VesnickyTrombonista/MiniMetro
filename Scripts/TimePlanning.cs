@@ -7,26 +7,27 @@ using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
+//using UnityEngine.UIElements;
 using static UnityEngine.Rendering.CoreUtils;
 
 public class TimePlanning : MonoBehaviour
 {
+    public static TimePlanning singletone;
     public Slider slider;
-
     public Transform stationsGeneratedList;
-    private StationGenerating stationGenerator;
+    public StationGenerating stationGenerator;
     public Transform stationsTransform;
     private Dictionary<string, Transform> stations = new Dictionary<string, Transform>(7);
     List<string> alredySpawnedStationsTypes = new List<string>();
     List<Station> stationsQueues = new List<Station>();
 
-    private PeopleGenerating peopleGenerator;
+    public PeopleGenerating peopleGenerator;
     public Transform peopleTransform;
     private Dictionary<string, Transform> people = new Dictionary<string, Transform>(7);
 
     // for camera scrolling
     private bool scrollerIsUpdated = false;
-    public float weekDuration = 60f;
+    private float weekDuration = 84f;
     private float currentTimeInWeek;
     public float currentWeek = 0;
     private int firstFastPeriod = 5;
@@ -35,50 +36,72 @@ public class TimePlanning : MonoBehaviour
     private float defaultSliderPercentage = 0.01f;
     private float sliderPercentageForSpawningStation;
     private float sliderValueForGeneratingNextStation;
+    private float defaultBreakForSpawningStation = 3f;
     private float sliderPercentageForSpawningPerson;
     private float sliderValueForGeneratingNextPerson;
 
     // speed of people generating
     // floats because of dividing
-    private float daysInWeek = 7; 
-    private float peoplePerDay = 4;
+    private float daysInWeek = 7;
+    private float peoplePerDay = 3;
 
     // camera 
     public float defaultCameraSize = 2f;
     private float currentScrollAmount;
-    public float scrollAmountFast = 0.5f;
-    public float scrollAmountSlow = 0.1f;
+    public float scrollAmountFast = 0.3f;
+    public float scrollAmountSlow;
     public float scrollingSmoothness = 0.25f;
+    private float differenceOfScrolling = 3;
 
     public Camera mainCamera;
     private float cameraSize;
     private float newCameraSize;
+    private float cameraSizeMin;
+    private float cameraSizeMax;
 
     public TextMeshProUGUI totalPassengersCount;
+
+    // Awake is called when the script is initialized and when a Scene loads
+    void Awake()
+    {
+        singletone = this;
+    }
 
     // Start is called before the first frame update
     void Start()
     {
-        stationGenerator = new StationGenerating();
-        peopleGenerator = new PeopleGenerating();
+        stationGenerator = this.GetComponent<StationGenerating>();
+        peopleGenerator = this.GetComponent<PeopleGenerating>();
         SetSpawningProperty();
         SetDefaultTimer();
         SetCameraDefaultProperty();
         GetStationsIntoDictionary();
         GetPeopleIntoDictionary();
-        totalPassengersCount.text = "0";
+        GenerateThreeInitStations();
+        SetCameraSize();
     }
-
-    // Update is called once per frame
+    /// <summary>
+    /// Generates three initial stations of different types to create a sense of transporting 
+    /// people right from the beginning.
+    /// </summary>
+    public void GenerateThreeInitStations()
+    {
+        stationGenerator.GenerateDefaultStation("circle", stations, stationsGeneratedList, currentWeek, stationsQueues);
+        stationGenerator.GenerateDefaultStation("square",stations, stationsGeneratedList, currentWeek, stationsQueues);
+        stationGenerator.GenerateDefaultStation("triangle", stations, stationsGeneratedList, currentWeek, stationsQueues);
+        sliderValueForGeneratingNextStation = defaultBreakForSpawningStation * sliderPercentageForSpawningStation;
+    }
+    // Update is called once per frame, main loop of these
     void Update()
     {
         UpdateTimer();
         // totalPassengersCount.text = AddTransportedPassenger(totalPassengersCount.text, stationsQueues);
-        if (slider.value == slider.maxValue) { // new week
+        if (slider.value == slider.maxValue)
+        { // new week
             currentWeek++;
             SetDefaultTimer();
 
-            SetCameraSize();
+            
         }
         if (slider.value >= sliderValueForGeneratingNextPerson)
         {
@@ -89,16 +112,17 @@ public class TimePlanning : MonoBehaviour
                 for (int i = 0; i < stationsGeneratedList.childCount; i++)
                 {
                     Transform station = stationsGeneratedList.GetChild(i);
-                    peopleGenerator.GeneratePerson(people, station, station.GetChild(0), alredySpawnedStationsTypes); 
+                    peopleGenerator.GeneratePerson(people, station, station.GetChild(0), alredySpawnedStationsTypes);
                     // station.GetChild(0) = peopleQueue
                 }
             }
 
             sliderValueForGeneratingNextPerson += sliderPercentageForSpawningPerson;
-            
+
         }
         if (slider.value >= sliderValueForGeneratingNextStation)
         {
+            SetCameraSize();
 
             stationGenerator.GenerateStation(stations, stationsGeneratedList, currentWeek, stationsQueues);
 
@@ -109,13 +133,13 @@ public class TimePlanning : MonoBehaviour
         {
             if (newCameraSize - cameraSize > 2 * currentScrollAmount) // scrolling is slow
             {
-                ChangeCameraSizeContinuosly(0.25f * scrollingSmoothness);
+                ChangeCameraSizeContinuosly(0.25f * scrollingSmoothness); // 0.25f
             }
             else
             {
                 ChangeCameraSizeContinuosly(scrollingSmoothness);
             }
-            
+
         }
         if (cameraSize == newCameraSize)
         {
@@ -165,6 +189,10 @@ public class TimePlanning : MonoBehaviour
         mainCamera.orthographicSize = defaultCameraSize;
         cameraSize = mainCamera.orthographicSize;
         newCameraSize = cameraSize;
+        cameraSizeMin = 0.5f; //3f, too fast
+        cameraSizeMax = 16f;
+        scrollAmountSlow = scrollAmountFast / differenceOfScrolling;
+        totalPassengersCount.text = "0";
     }
     /// <summary>
     /// Sets the camera size based on the current week.
@@ -180,7 +208,7 @@ public class TimePlanning : MonoBehaviour
         {
             newCameraSize = mainCamera.orthographicSize + scrollAmountSlow;
         }
-        newCameraSize = Mathf.Clamp(newCameraSize, 3f, 16f);
+        newCameraSize = Mathf.Clamp(newCameraSize, cameraSizeMin, cameraSizeMax);
     }
 
     /// <summary>
@@ -218,6 +246,12 @@ public class TimePlanning : MonoBehaviour
         people.Add("square", peopleTransform.GetChild(5));
         people.Add("circle", peopleTransform.GetChild(6));
     }
+    /// <summary>
+    /// Increases the count of transported passengers from a station's queue to the given count and returns the updated count.
+    /// </summary>
+    /// <param name="count">The current count of transported passengers.</param>
+    /// <param name="stationsList">A list of stations to check for passengers.</param>
+    /// <returns>The updated count of transported passengers after adding passengers from the station queues.</returns>
     public string AddTransportedPassenger(string count, List<Station> stationsList)
     {
         int newCount;
