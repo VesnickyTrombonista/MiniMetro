@@ -8,6 +8,7 @@ using static UnityEditor.Searcher.SearcherWindow;
 
 public class PeopleGenerating : MonoBehaviour
 {
+    public static PeopleGenerating singletone;
     // scaling of the station
     private float scaleX = 0.45f;
     private float scaleY = 0.5f;
@@ -17,6 +18,13 @@ public class PeopleGenerating : MonoBehaviour
 
     private string[] peopleNames = new string[7] { "circle", "square", "triangle", "hexagon", "rectangular", "pentagon", "star" };
 
+    // Awake is called when the script is initialized and when a Scene loads
+    void Awake()
+    {
+        singletone = this;
+    }
+
+    // Start is called before the first frame update
     private void Start()
     {
 
@@ -34,10 +42,10 @@ public class PeopleGenerating : MonoBehaviour
         Station stationQueue = station.GetComponent<Station>();
         string stationType = stationQueue.name;
         string peopleType = GeneratePeopleType(stationType, spawnedStationsTypes);
-        /* if (peopleType == "")
+        if (peopleType == "")
         {
             return;
-        }*/
+        }
         Vector3 position = GetStationPosition(station) + new Vector3(stationQueue.passengerQueue.Count * spacing - alignment, 0, 0);
         GameObject newPerson = Instantiate(people[peopleType].gameObject, position, Quaternion.identity);
         newPerson.transform.parent = peopleQueue;

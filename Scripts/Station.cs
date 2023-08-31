@@ -16,15 +16,13 @@ public class Station : MonoBehaviour
     public string stationName;
     private int capacityWithNoWaiting = 6;
     private int maximalCapacity = 20;
-
+    public Vector3 centre;
     public float spacing = 0.01f;
     // Start is called before the first frame update
     void Start()
-    {
-        //generator = new StationGenerating();
-        //planner = new TimePlanning();
-        this.AddComponent<StationGenerating>();
-        this.AddComponent<TimePlanning>();
+    {        
+        //TimePlanning.singletone.
+        centre = this.GetComponent<Transform>().position;
     }
     // Update is called once per frame
     void Update()
