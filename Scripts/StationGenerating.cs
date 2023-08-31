@@ -32,12 +32,16 @@ public class StationGenerating : MonoBehaviour
     private float scaleX = 0.025f;
     private float scaleY = 0.045f;
 
+
+    // scaling of camera size
     private float cameraScaleX = 0.057f;
     private float cameraScaleY = 0.025f;
 
+    // sizes of boarder
     private float cameraMaxX = 0.48f;
     private float cameraMaxY = 0.36f;
 
+    // scales for stations
     private float cameraScaleCheckX = 0.3f;
     private float cameraScaleCheckY = 0.2f;
 
@@ -49,10 +53,11 @@ public class StationGenerating : MonoBehaviour
     private float borderX = 0.45f;
     private float borderY = 0.45f;
 
-    private float alpha; // = 1.3f;
+    private float alpha; // = 1.3f; later for scaling
     public string[] stationsNames = new string[7] { "circle", "square", "triangle", "hexagon", "rectangular", "pentagon", "star" };
     public List<string> alreadySpawnedStationsTypes = new List<string>();
 
+    // init positions for three stations
     public List<Vector3> initPositions = new List<Vector3>();
     private int initStation = -1; // not used, up to 2
     public List<Vector3> shuffledPositions = new List<Vector3>();
@@ -66,8 +71,7 @@ public class StationGenerating : MonoBehaviour
     }
     // Start is called before the first frame update
     private void Start()
-    {
-
+    { 
         mainCamera = Camera.main;
         surroundings = mainCamera.orthographicSize * scaling;
         Vector3 positionA = new Vector3(0, 0.4f * surroundings, 0);
@@ -226,8 +230,9 @@ public class StationGenerating : MonoBehaviour
     /// <returns>The adjusted Vector3 position within the specified camera borders.</returns>
     private Vector3 CheckBorder(Vector3 position)
     {
-        float maxX = Math.Max(cameraMaxX, cameraScaleCheckX * mainCamera.orthographicSize);
-        float maxY = Math.Max(cameraMaxY, cameraScaleCheckY * mainCamera.orthographicSize);
+        // Math.Max
+        float maxX = Math.Min(cameraMaxX, cameraScaleCheckX * mainCamera.orthographicSize);
+        float maxY = Math.Min(cameraMaxY, cameraScaleCheckY * mainCamera.orthographicSize);
 
         position.x = Mathf.Clamp(position.x, - maxX, maxX);
         position.y = Mathf.Clamp(position.y, - maxY, maxY);
@@ -263,11 +268,11 @@ public class StationGenerating : MonoBehaviour
     {
         if (number > 0)
         {
-            number += surroundings * info.GetComponent<TimePlanning>().currentWeek;
+            number += surroundings; //* info.GetComponent<TimePlanning>().currentWeek;
         }
         else if (number < 0)
         {
-            number -= surroundings * info.GetComponent<TimePlanning>().currentWeek;
+            number -= surroundings; // * info.GetComponent<TimePlanning>().currentWeek;
         }
         return number;
     }
@@ -338,14 +343,23 @@ public class StationGenerating : MonoBehaviour
             else
             {
                 position = GetPositionFartherInGame(position);
-                position = FinalCheckValidPosition(position, stationsGeneratedList);
                 position = CheckStationDistanceFromRiver(position, river, distanceFromRiver);
+                position = FinalCheckValidPosition(position, stationsGeneratedList);
                 break;
             }
         }
 
         return position;
     }
+
+    /// <summary>
+    /// Adjusts the position of a station to maintain a minimum distance from a river.
+    /// If the station is too close to the river, its position is adjusted outward.
+    /// </summary>
+    /// <param name="position">The position of the station to be checked and adjusted.</param>
+    /// <param name="river">The Transform of the river object containing an EdgeCollider2D.</param>
+    /// <param name="minDistanceFromRiver">The minimum distance required between the station and the river.</param>
+    /// <returns>An adjusted position for the station that maintains the specified minimum distance from the river.</returns>
     public Vector3 CheckStationDistanceFromRiver(Vector3 position, Transform river, float minDistanceFromRiver)
     {
         Vector2[] riverPoints = river.GetComponent<EdgeCollider2D>().points;

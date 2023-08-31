@@ -46,7 +46,7 @@ public class TimePlanning : MonoBehaviour
     private float daysInWeek = 7;
     private float peoplePerDay = 3;
 
-    // camera 
+    // camera sizes
     public float defaultCameraSize = 2f;
     private float currentScrollAmount;
     public float scrollAmountFast = 0.3f;
@@ -54,12 +54,14 @@ public class TimePlanning : MonoBehaviour
     public float scrollingSmoothness = 0.25f;
     private float differenceOfScrolling = 3;
 
+    // camera borders
     public Camera mainCamera;
     private float cameraSize;
     private float newCameraSize;
     private float cameraSizeMin;
     private float cameraSizeMax;
 
+    // people transported
     public TextMeshProUGUI totalPassengersCount;
 
     // checking peopleLimit
@@ -293,6 +295,10 @@ public class TimePlanning : MonoBehaviour
         newCount = Int32.Parse(count) + peopleCount;
         return newCount.ToString();
     }
+    /// <summary>
+    /// Checks the passenger queues of generated stations to determine if any queue has exceeded the maximal capacity.
+    /// If a queue exceeds the capacity, it triggers a critical mode that may activate the countdown and other actions.
+    /// </summary>
     public void CheckQueues()
     {
         for (int i = 0; i < stationsGeneratedList.childCount; i++)
@@ -314,10 +320,15 @@ public class TimePlanning : MonoBehaviour
         }
         if (!criticalMode)
         {
-            timeLeft = enoughTime;
+            timeLeft = enoughTime; // restore time for critical part
             countdownCount.SetActive(false); // not visible
         }
     }
+    /// <summary>
+    /// Manages the countdown for the game over condition.
+    /// Decreases the time left by the time passed since the last frame when is in critical secction, 
+    /// updates the countdown display, and triggers the game over condition when time runs out.
+    /// </summary>
     public void GameOverCountdown()
     {
         timeLeft -= Time.deltaTime;

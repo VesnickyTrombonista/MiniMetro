@@ -9,7 +9,8 @@ using static UnityEngine.Rendering.DebugUI.Table;
 
 public class Station : MonoBehaviour
 {
-    public List<GameObject> passengerQueue = new List<GameObject>();
+    // station's properties
+    public List<GameObject> passengerQueue = new List<GameObject>(); // for checking count
     public StationGenerating generator;
     public TimePlanning planner;
     public Transform visibleQueue;
