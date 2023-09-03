@@ -18,9 +18,9 @@ public class TimePlanning : MonoBehaviour
     public Transform stationsGeneratedList;
     public StationGenerating stationGenerator;
     public Transform stationsTransform;
-    private Dictionary<string, Transform> stations = new Dictionary<string, Transform>(7);
-    List<string> alredySpawnedStationsTypes = new List<string>();
-    List<Station> stationsQueues = new List<Station>();
+    public Dictionary<string, Transform> stations = new Dictionary<string, Transform>(7);
+    public List<string> alredySpawnedStationsTypes = new List<string>();
+    public List<Station> stationsQueues = new List<Station>();
 
     public PeopleGenerating peopleGenerator;
     public Transform peopleTransform;
@@ -140,7 +140,7 @@ public class TimePlanning : MonoBehaviour
         {
             SetCameraSize();
 
-            stationGenerator.GenerateStation(stations, stationsGeneratedList, currentWeek, stationsQueues);
+            stationGenerator.GenerateStationAsync(stations, stationsGeneratedList, currentWeek, stationsQueues);
 
             sliderValueForGeneratingNextStation += sliderPercentageForSpawningStation;
 

@@ -11,6 +11,8 @@ using static System.Collections.Specialized.BitVector32;
 using static UnityEngine.Rendering.CoreUtils;
 using UnityEngine.UIElements;
 using static UnityEngine.GraphicsBuffer;
+using System.Threading;
+using System.Threading.Tasks;
 
 public class StationGenerating : MonoBehaviour
 {
@@ -53,7 +55,7 @@ public class StationGenerating : MonoBehaviour
     private float borderX = 0.45f;
     private float borderY = 0.45f;
 
-    private float alpha; // = 1.3f; later for scaling
+    private float alpha = 2f; // = 1.3f; later for scaling
     public string[] stationsNames = new string[7] { "circle", "square", "triangle", "hexagon", "rectangular", "pentagon", "star" };
     public List<string> alreadySpawnedStationsTypes = new List<string>();
 
@@ -87,17 +89,17 @@ public class StationGenerating : MonoBehaviour
     void Update()
     {
         surroundings = mainCamera.orthographicSize * scaling;
-        alpha = (float)mainCamera.orthographicSize * scaling;
+        // alpha = (float)mainCamera.orthographicSize * scaling;
         // scaling += 0.0002f; // 0.001f;
     }
     /// <summary>
-    /// Generates a new station object based on the current week and adds it to the stations list.
+    /// Generates asynchronously a new station object based on the current week and adds it to the stations list.
     /// </summary>
     /// <param name="stations">A dictionary containing all available station types.</param>
     /// <param name="stationsGeneratedList">The parent transform of the stations list.</param>
     /// <param name="currentWeek">The current week of the game.</param>
     /// <param name="stationsQueues">A list of stations with their passengers queues.</param>
-    public void GenerateStation(Dictionary<string, Transform> stations, Transform stationsGeneratedList, float currentWeek, List<Station> stationsQueues)
+    public async void GenerateStationAsync(Dictionary<string, Transform> stations, Transform stationsGeneratedList, float currentWeek, List<Station> stationsQueues)
     {
         string name = GetStationName(stationsNames, currentWeek);
         if (!alreadySpawnedStationsTypes.Contains(name))
@@ -107,13 +109,16 @@ public class StationGenerating : MonoBehaviour
         GameObject newStation = Instantiate(stations[name].gameObject, Vector3.zero, Quaternion.identity, stationsGeneratedList);
         newStation.transform.localScale = new Vector3(scaleX, scaleY, 0f);
         Vector3 randomVector = GetRandomPosition();
-        Vector3 position = GetPositionInGame(stationsGeneratedList);
-        if (info.GetComponent<TimePlanning>().currentWeek > easyWeeks)
+        Vector3 position = await GetPositionInGameAsync(stationsGeneratedList);
+        if (info.GetComponent<TimePlanning>().currentWeek > 3*easyWeeks)
         {
             position = GetPositionFartherInGame(position);
         }
         position = MixDownPositionsTogether(position, randomVector);
+        position = RandomizePositivityOfXYCoordinates(position);
         newStation.transform.localPosition = Vector3.zero + position;
+        // TODO: better distibution of surroundings positions
+        // I need more position to spawn to have them in a circle from a centre
         newStation.GetComponent<Station>().name = name;
         stationsQueues.Add(newStation.GetComponent<Station>());
     }
@@ -150,6 +155,7 @@ public class StationGenerating : MonoBehaviour
         position.x = x;
         position.y = scaleYGenarating * y;
         position = CheckBorder(position);
+        position = RandomizePositivityOfXYCoordinates(position);
         return position;
     }
     /// <summary>
@@ -204,23 +210,44 @@ public class StationGenerating : MonoBehaviour
         return shuffledPositions;
     }
     /// <summary>
-    /// Generates a random position within a specified area centered around the camera's view, considering scaling and surroundings.
+    /// Generates asynchronously a random position within a specified area centered around the camera's view, considering scaling and surroundings.
     /// </summary>
     /// <param name="stationsGeneratedList">The list of stations for checking position validity.</param>
     /// <returns>A random position within the specified area.</returns>
-    Vector3 GetPositionInGame(Transform stationsGeneratedList)
+    public async Task<Vector3> GetPositionInGameAsync(Transform stationsGeneratedList)
     {
         float sizeX = cameraScaleX + scaling / 2f;
         float sizeY = cameraScaleY + scaling / 2f;
-        sizeX = GetHigherSize(sizeX, mainCamera.orthographicSize * surroundings * sizeX);
-        sizeY = GetHigherSize(sizeY, mainCamera.orthographicSize * scaleYGenarating * surroundings * sizeY);
-        float randomX = UnityEngine.Random.Range(-sizeX, sizeX);
-        float randomY = UnityEngine.Random.Range(-sizeY, sizeY);
+        sizeX = GetHigherAbsSize((1 / alpha) * sizeX, (1 / alpha) * mainCamera.orthographicSize * surroundings * sizeX);
+        sizeY = GetHigherAbsSize(alpha * sizeY, alpha * mainCamera.orthographicSize * scaleYGenarating * surroundings * sizeY);
+        float weeks = info.GetComponent<TimePlanning>().currentWeek;
+        float randomX = UnityEngine.Random.Range(-sizeX - weeks, sizeX + weeks);
+        float randomY = UnityEngine.Random.Range(-sizeY - weeks, sizeY + weeks);
 
         Vector3 position = new Vector3(mainCamera.orthographicSize * randomX, mainCamera.orthographicSize * randomY, 0);
-        position = CheckValidPosition(position, stationsGeneratedList);
+        position = await CheckValidPosition(position, stationsGeneratedList);
         position = CheckStationDistanceFromRiver(position, river, distanceFromRiver);
         position = CheckBorder(position);
+        position = RandomizePositivityOfXYCoordinates(position);
+        return position;
+    }
+    /// <summary>
+    /// Randomizes the positivity of the coordinates of a given Vector3 position.
+    /// </summary>
+    /// <param name="position">The input position whose coordinates will be randomized.</param>
+    /// <returns>A Vector3 with randomized coordinate positivities.</returns>
+    public Vector3 RandomizePositivityOfXYCoordinates(Vector3 position)
+    {
+        List<(int, int)> tuplesOfCoordinates = new List<(int, int)> { (1, 1), (1,-1), (-1,1), (-1,-1) };
+
+
+        // randomize positivity
+        int index = UnityEngine.Random.Range(0, tuplesOfCoordinates.Count);
+        (int x, int y) randomPositivity = tuplesOfCoordinates[index];
+
+        position.x = position.x * randomPositivity.x;
+        position.y = position.y * randomPositivity.y;
+
         return position;
     }
     /// <summary>
@@ -247,16 +274,36 @@ public class StationGenerating : MonoBehaviour
     /// <param name="sizeOld">The first size to compare.</param>
     /// <param name="sizeNew">The second size to compare.</param>
     /// <returns>The higher value between the two input sizes.</returns>
-    private float GetHigherSize(float sizeOld, float sizeNew)
+    private float GetHigherAbsSize(float sizeOld, float sizeNew)
     {
-        if (sizeOld > sizeNew)
+        if (sizeOld == 0 || sizeNew == 0)
         {
-            return sizeOld;
+            return 0f;
+        }
+        if (sizeOld > 0)
+        {
+            if (sizeOld > sizeNew)
+            {
+                return sizeOld;
+            }
+            else
+            {
+                return sizeNew;
+            }
         }
         else
         {
-            return sizeNew;
+            if (sizeOld < sizeNew)
+            {
+                return sizeOld;
+            }
+            else
+            {
+                return sizeNew;
+            }
+
         }
+        
     }
 
     /// <summary>
@@ -312,26 +359,26 @@ public class StationGenerating : MonoBehaviour
     /// </summary>
     /// <param name="position">The position to check for validity.</param>
     /// <returns>A valid position that does not overlap with other colliders.</returns>
-    public Vector3 CheckValidPosition(Vector3 position, Transform stationsGeneratedList)
+    public async Task<Vector3> CheckValidPosition(Vector3 position, Transform stationsGeneratedList)
     {
         Collider[] colliders = Physics.OverlapSphere(position, distanceFromOthers);
         if (colliders.Length > 0)
         {
-            position = GetPositionInGame(stationsGeneratedList);
+            position = await GetPositionInGameAsync(stationsGeneratedList);
             position = CheckStationDistanceFromRiver(position, river, distanceFromRiver);
-            position = FinalCheckValidPosition(position, stationsGeneratedList);
+            position = await FinalCheckValidPositionAsync(position, stationsGeneratedList);
         }
 
         return position;
     }
     /// <summary>
-    /// Performs the final validation of a position by checking its distance from other stations' centers.
+    /// Performs the final validation of a position asynchronously by checking its distance from other stations' centers.
     /// If the distance is less than the required distance, the position is adjusted further away.
     /// </summary>
     /// <param name="position">The position to be validated.</param>
     /// <param name="stationsGeneratedList">The list of stations to compare distances against.</param>
     /// <returns>A validated position that meets the required distance criteria from other stations.</returns>
-    public Vector3 FinalCheckValidPosition(Vector3 position, Transform stationsGeneratedList)
+    public async Task<Vector3> FinalCheckValidPositionAsync(Vector3 position, Transform stationsGeneratedList)
     {
         for (int i = 0; i < stationsGeneratedList.childCount; i++)
         {
@@ -344,7 +391,7 @@ public class StationGenerating : MonoBehaviour
             {
                 position = GetPositionFartherInGame(position);
                 position = CheckStationDistanceFromRiver(position, river, distanceFromRiver);
-                position = FinalCheckValidPosition(position, stationsGeneratedList);
+                position = await FinalCheckValidPositionAsync(position, stationsGeneratedList);
                 break;
             }
         }

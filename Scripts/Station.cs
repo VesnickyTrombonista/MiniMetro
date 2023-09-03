@@ -5,6 +5,8 @@ using System.Text;
 using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UIElements;
+using static UnityEngine.Rendering.CoreUtils;
 using static UnityEngine.Rendering.DebugUI.Table;
 
 public class Station : MonoBehaviour
@@ -18,20 +20,32 @@ public class Station : MonoBehaviour
     
     public Vector3 centre;
     public float spacing = 0.01f;
+    public float distanceFromOthers = 2f;
+
+    TimePlanning timePlanner;
+    StationGenerating stationGenerator;
     // Start is called before the first frame update
     void Start()
     {        
-        //TimePlanning.singletone.
         centre = this.GetComponent<Transform>().position;
+        timePlanner = TimePlanning.singletone;
+        stationGenerator = StationGenerating.singletone;
     }
     // Update is called once per frame
     void Update()
     {
+        OnCollisionEnter();
     }
-    /* void OnCollision()
+    void OnCollisionEnter()
     {
-        generator.transform.localPosition = Vector3.zero + generator.CheckValidPosition(generator.transform.localPosition, planner.stationsGeneratedList);
-    }*/
+        if (passengerQueue.Count == 0 && 
+            Physics.OverlapSphere(this.gameObject.transform.position, distanceFromOthers).Length > 0)
+        {
+            Destroy(this.gameObject);
+            stationGenerator.GenerateStationAsync(timePlanner.stations, timePlanner.stationsGeneratedList, timePlanner.currentWeek, timePlanner.stationsQueues);
+        }
+        
+    }
 
     /// <summary>
     /// Adds a passenger to the station's queue and instantiates a new person object in the visible queue.
