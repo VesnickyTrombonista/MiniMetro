@@ -21,11 +21,19 @@ public class LinesDrawer : MonoBehaviour
 
     Camera myCamera;
 
+    public List<GameObject> linesTypes;
+    public static LinesDrawer singletone;
+
+    void Awake()
+    {
+        singletone = this;
+    }
+
     // Start is called before the first frame update
     void Start()
     {
         myCamera = Camera.main;
-        cantDrawOverLayerIndex = 0;
+        cantDrawOverLayerIndex = 5; // UI layer for gameinfo
         selectedLine = 0;
         linePrefab = linePrefabs[selectedLine];
     }
@@ -98,6 +106,5 @@ public class LinesDrawer : MonoBehaviour
     public void CheckPressedButtons()
     {
         linePrefab = linePrefabs[selectedLine];
-        // get int from buttons
     }
 }

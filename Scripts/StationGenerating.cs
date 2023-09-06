@@ -117,7 +117,7 @@ public class StationGenerating : MonoBehaviour
         position = MixDownPositionsTogether(position, randomVector);
         position = RandomizePositivityOfXYCoordinates(position);
         newStation.transform.localPosition = Vector3.zero + position;
-        // TODO: better distibution of surroundings positions
+        // TODO for a tester: better distibution of surroundings positions
         // I need more position to spawn to have them in a circle from a centre
         newStation.GetComponent<Station>().name = name;
         stationsQueues.Add(newStation.GetComponent<Station>());
@@ -218,8 +218,13 @@ public class StationGenerating : MonoBehaviour
     {
         float sizeX = cameraScaleX + scaling / 2f;
         float sizeY = cameraScaleY + scaling / 2f;
-        sizeX = GetHigherAbsSize((1 / alpha) * sizeX, (1 / alpha) * mainCamera.orthographicSize * surroundings * sizeX);
-        sizeY = GetHigherAbsSize(alpha * sizeY, alpha * mainCamera.orthographicSize * scaleYGenarating * surroundings * sizeY);
+        //sizeX = GetHigherAbsSize((1 / alpha) * sizeX, (1 / alpha) * mainCamera.orthographicSize * surroundings * sizeX);
+        //sizeY = GetHigherAbsSize(alpha * sizeY, alpha * mainCamera.orthographicSize * scaleYGenarating * surroundings * sizeY);
+
+        // // TODO for a tester: to get precise sizes
+        sizeX = Math.Max((1 / alpha) * sizeX, (1 / alpha) * mainCamera.orthographicSize * surroundings * sizeX);
+        sizeY = Math.Max(alpha * sizeY, alpha * mainCamera.orthographicSize * scaleYGenarating * surroundings * sizeY);
+
         float weeks = info.GetComponent<TimePlanning>().currentWeek;
         float randomX = UnityEngine.Random.Range(-sizeX - weeks, sizeX + weeks);
         float randomY = UnityEngine.Random.Range(-sizeY - weeks, sizeY + weeks);
@@ -229,6 +234,8 @@ public class StationGenerating : MonoBehaviour
         position = CheckStationDistanceFromRiver(position, river, distanceFromRiver);
         position = CheckBorder(position);
         position = RandomizePositivityOfXYCoordinates(position);
+        position.x = position.x / 2;
+        position.y = position.y / 2;
         return position;
     }
     /// <summary>
