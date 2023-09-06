@@ -24,6 +24,9 @@ public class LinesDrawer : MonoBehaviour
     public List<GameObject> linesTypes;
     public static LinesDrawer singletone;
 
+    public GameObject trainModel;
+    public Transform allTrainsTransform;
+
     void Awake()
     {
         singletone = this;
@@ -59,6 +62,7 @@ public class LinesDrawer : MonoBehaviour
     {
         currentLine = Instantiate(linePrefabs[selectedLine], this.transform).GetComponent<Line>();
 
+        // currentLine.UsePhysics(false);
         currentLine.SetLineColor(lineColor);
         currentLine.SetPointsMinDistance(linePointsMinDistance);
         currentLine.SetLineWidth(lineWidth);
@@ -99,6 +103,7 @@ public class LinesDrawer : MonoBehaviour
                 currentLine = null;
             }
         }
+
     }
     /// <summary>
     /// Checks and can change the colour of the drawed line. Input is from buttons.

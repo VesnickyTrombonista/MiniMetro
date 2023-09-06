@@ -31,8 +31,8 @@ public class StationGenerating : MonoBehaviour
     public float distanceFromRiver = 1f;
 
     // scaling of the station
-    private float scaleX = 0.025f;
-    private float scaleY = 0.045f;
+    public float scaleX = 0.025f;
+    public float scaleY = 0.045f;
 
 
     // scaling of camera size
