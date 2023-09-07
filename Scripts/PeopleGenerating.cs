@@ -50,7 +50,7 @@ public class PeopleGenerating : MonoBehaviour
         GameObject newPerson = Instantiate(people[peopleType].gameObject, position, Quaternion.identity);
         newPerson.transform.parent = peopleQueue;
         newPerson.transform.localScale = new Vector3(scaleX, scaleY, 0f);
-        newPerson.GetComponent<Person>().name = peopleType;
+        newPerson.GetComponent<Person>().personName = peopleType;
         newPerson.transform.position = position;
         
         stationQueue.passengerQueue.Add(newPerson);

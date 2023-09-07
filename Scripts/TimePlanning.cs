@@ -7,6 +7,7 @@ using System.Xml.Schema;
 using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 //using UnityEngine.UIElements;
 using static UnityEngine.Rendering.CoreUtils;
@@ -70,7 +71,6 @@ public class TimePlanning : MonoBehaviour
     private int maximalCapacity = 20;
     private bool criticalMode = false;
     public GameObject countdownCount;
-
     // Awake is called when the script is initialized and when a Scene loads
     void Awake()
     {
@@ -335,7 +335,7 @@ public class TimePlanning : MonoBehaviour
         countdownCount.GetComponent<TextMeshProUGUI>().text = Mathf.Round(timeLeft).ToString();
         if (timeLeft < 0)
         {
-            // GameOver(); show endGame window
+            Application.Quit();
             return;
         }
     }

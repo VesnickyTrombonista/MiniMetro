@@ -42,7 +42,9 @@ public class ButtonManager : MonoBehaviour
             myButton.GetComponentInChildren<TextMeshProUGUI>().color = myColor;
         }
     }
-    
+    /// <summary>
+    /// Handles the button click event and sets the selected line based on the button's name.
+    /// </summary>
     public void ButtonClicked()
     {
         // Debug.Log("Button "+ buttonName +" clicked!"); for debugging
