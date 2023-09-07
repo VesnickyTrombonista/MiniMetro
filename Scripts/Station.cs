@@ -46,6 +46,11 @@ public class Station : MonoBehaviour
         }
         
     }
+    // OnCollisionEnter2D is called when the train collides
+    /*void OnCollisionEnter2D(Collision2D collider)
+    {
+        Debug.Log("OnCollisionEnter2D station with> " + collider);
+    }*/
 
     /// <summary>
     /// Adds a passenger to the station's queue and instantiates a new person object in the visible queue.

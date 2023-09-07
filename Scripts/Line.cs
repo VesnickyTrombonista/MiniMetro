@@ -39,6 +39,7 @@ public class Line : MonoBehaviour
     // circle collider added to each line's point
     float circleColliderRadius;
 
+    bool existsTrain = false;
     private void Awake()
     {
         lineDrawer = LinesDrawer.singletone;
@@ -51,26 +52,43 @@ public class Line : MonoBehaviour
         myTrainsTransform = lineDrawer.allTrainsTransform;
         GetPositionsForTrain();
         GenerateTrain(lineDrawer.trainModel.gameObject, myTrainsTransform);
-        myTrain = newTrain.GetComponent<Train>();
+        existsTrain = true;
+        existsTrain = newTrain.TryGetComponent<Train>(out myTrain);
+        if (!existsTrain)
+        {
+            GetPositionsForTrain();
+            GenerateTrain(lineDrawer.trainModel.gameObject, myTrainsTransform);
+            myTrain = newTrain.GetComponent<Train>();
+        }
         myTrain.GetComponent<Train>().linePoints = trainPoints;
     }
     // Update is called once per frame
     private void Update()
     {
-        if (countsOfAllPoints < this.GetComponent<LineRenderer>().positionCount)
+        if (existsTrain)
         {
-            GetPositionsForTrain();
-            countsOfAllPoints = this.GetComponent<LineRenderer>().positionCount;
-            vertices = this.GetComponent<LineRenderer>().GetPositions(trainPoints);
-            myTrain.GetComponent<Train>().linePoints = trainPoints;
-            myTrain.GetComponent<Train>().start = true;
-            myTrain.GetComponent<Train>().maxPoint = trainPoints.Length;
-        }
-        /*if (trainPoints.Length < 2)
+            if (countsOfAllPoints < this.GetComponent<LineRenderer>().positionCount)
+            {
+                GetPositionsForTrain();
+                countsOfAllPoints = this.GetComponent<LineRenderer>().positionCount;
+                vertices = this.GetComponent<LineRenderer>().GetPositions(trainPoints);
+                existsTrain = newTrain.TryGetComponent<Train>(out myTrain);
+                myTrain.GetComponent<Train>().linePoints = trainPoints;
+                myTrain.GetComponent<Train>().start = true;
+                myTrain.GetComponent<Train>().maxPoint = trainPoints.Length;
+            }
+            if (planner.currentTimeInWeek > myTrain.timeOfCreation + myTrain.deltaTimeForDestruction
+                && myTrain.linePoints.Length < 3)
             {
                 Destroy(newTrain);
+                Destroy(myTrain);
             }
-        */
+        }
+        else 
+        {
+            return;
+        }
+        
     }
     /// <summary>
     /// Retrieves positions from the LineRenderer and stores them in the trainPoints list.

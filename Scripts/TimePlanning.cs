@@ -28,8 +28,8 @@ public class TimePlanning : MonoBehaviour
 
     // for camera scrolling
     private bool scrollerIsUpdated = false;
-    private float weekDuration = 84f; //84f
-    private float currentTimeInWeek;
+    private float weekDuration = 21f; //84f
+    public float currentTimeInWeek;
     public float currentWeek = 0;
     private int firstFastPeriod = 5;
 

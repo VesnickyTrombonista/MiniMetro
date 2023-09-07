@@ -10,7 +10,7 @@ public class Train : MonoBehaviour
     public string trainName;
 
     public Vector3[] linePoints;  // An array of Vector3 points that define the line
-    public float speed = 0.5f;    // The speed at which the GameObject moves
+    public static float speed = 0.5f;    // The speed at which the GameObject moves
 
     private int currentPoint = 0; // because train starts at 0 position
     public int maxPoint = 0;
@@ -19,9 +19,17 @@ public class Train : MonoBehaviour
 
     public float minimalDistance = 0.1f;
 
+    public TimePlanning planner;
+
+    public float timeOfCreation; // from planner and its currentTimeInWeek
+    public float deltaTimeForDestruction = 0.5f;
+
     // Start is called before the first frame update
     void Start()
     {
+        this.AddComponent<TrainDeletor>();
+        planner = TimePlanning.singletone;
+        timeOfCreation = planner.currentTimeInWeek;
         maxPoint = linePoints.Length;
         if (maxPoint > 1)
         {
@@ -32,6 +40,7 @@ public class Train : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        // OnCollisionEnter2D();
         if (start)
         {
             if (directionForward)
@@ -43,8 +52,12 @@ public class Train : MonoBehaviour
                 MoveBackward();
             }
         }
-        
-        
+        this.GetComponent<TrainDeletor>().Destruction(timeOfCreation, deltaTimeForDestruction, linePoints.Length, trainName);
+    }
+    // OnCollisionEnter2D is called when the train collides
+    void OnCollisionEnter2D(Collision2D collider)
+    {
+        Debug.Log("OnCollisionEnter2D train with> " + collider);
     }
 
     /// <summary>
