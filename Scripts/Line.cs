@@ -54,7 +54,7 @@ public class Line : MonoBehaviour
     // Update is called once per frame
     private void Update()
     {
-        
+        GetPositionsForTrain();
     }
     /// <summary>
     /// Retrieves positions from the LineRenderer and stores them in the trainPoints list.
@@ -64,10 +64,6 @@ public class Line : MonoBehaviour
         trainPoints = new Vector3[this.GetComponent<LineRenderer>().positionCount];
         int vertices;
         vertices = this.GetComponent<LineRenderer>().GetPositions(trainPoints);
-        //if (vertices < 2)
-        //{
-        //    trainPoints = null;
-        //}
     }
     /// <summary>
     /// Generates a new train object and adds it to the list of trains.
@@ -87,6 +83,10 @@ public class Line : MonoBehaviour
         newTrain.name = this.name.ToString().Remove(5) + "->" + myTrainsTransform.childCount.ToString(); 
         // remove(5) because of pattern LineX, where X is from 1 to 6
         myTrainsList.Add(newTrain);
+        if (trainPoints.Length == 0)
+        {
+            Destroy(newTrain);
+        }
     }
     /// <summary>
     /// Scales a given position using specified scaling factors and offsets.

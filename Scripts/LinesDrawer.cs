@@ -97,12 +97,15 @@ public class LinesDrawer : MonoBehaviour
             {
                 // if line has one point
                 Destroy(currentLine.gameObject);
+                Destroy(currentLine.GetComponent<Train>());
             }
             else
             {
                 currentLine = null;
             }
         }
+        // this.GetComponent<Line>().GetComponent<LineRenderer>().GetPositions(this.GetComponent<Line>().trainPoints);
+        // this.GetComponent<Line>().GetComponent<Train>().linePoints = this.GetComponent<Line>().trainPoints;
 
     }
     /// <summary>
