@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine.UIElements;
 using System.Net;
+using System.Threading;
 
 public class Line : MonoBehaviour
 {
@@ -21,6 +22,10 @@ public class Line : MonoBehaviour
     public StationGenerating generator;
     public TimePlanning planner;
 
+    GameObject newTrain;
+    int vertices;
+    private int countsOfAllPoints = 0;
+
     // scaling of position, needs more testingand better values
     public float moveXCoordinates = -48f;
     public float moveYCoordinates = -28f;
@@ -36,8 +41,6 @@ public class Line : MonoBehaviour
 
     private void Awake()
     {
-        this.AddComponent<Train>();
-        myTrain = this.GetComponent<Train>();
         lineDrawer = LinesDrawer.singletone;
         generator = StationGenerating.singletone;
         planner = TimePlanning.singletone;
@@ -48,13 +51,26 @@ public class Line : MonoBehaviour
         myTrainsTransform = lineDrawer.allTrainsTransform;
         GetPositionsForTrain();
         GenerateTrain(lineDrawer.trainModel.gameObject, myTrainsTransform);
+        myTrain = newTrain.GetComponent<Train>();
         myTrain.GetComponent<Train>().linePoints = trainPoints;
-
     }
     // Update is called once per frame
     private void Update()
     {
-        GetPositionsForTrain();
+        if (countsOfAllPoints < this.GetComponent<LineRenderer>().positionCount)
+        {
+            GetPositionsForTrain();
+            countsOfAllPoints = this.GetComponent<LineRenderer>().positionCount;
+            vertices = this.GetComponent<LineRenderer>().GetPositions(trainPoints);
+            myTrain.GetComponent<Train>().linePoints = trainPoints;
+            myTrain.GetComponent<Train>().start = true;
+            myTrain.GetComponent<Train>().maxPoint = trainPoints.Length;
+        }
+        /*if (trainPoints.Length < 2)
+            {
+                Destroy(newTrain);
+            }
+        */
     }
     /// <summary>
     /// Retrieves positions from the LineRenderer and stores them in the trainPoints list.
@@ -62,7 +78,6 @@ public class Line : MonoBehaviour
     public void GetPositionsForTrain()
     {
         trainPoints = new Vector3[this.GetComponent<LineRenderer>().positionCount];
-        int vertices;
         vertices = this.GetComponent<LineRenderer>().GetPositions(trainPoints);
     }
     /// <summary>
@@ -72,8 +87,9 @@ public class Line : MonoBehaviour
     /// <param name="trains">The parent transform of the train objects.</param>
     public void GenerateTrain(GameObject trainModel, Transform trains)
     {
-        GameObject newTrain = Instantiate(trainModel, Vector3.zero, Quaternion.identity, trains);
+        newTrain = Instantiate(trainModel, Vector3.zero, Quaternion.identity, trains);
         newTrain.transform.localScale = new Vector3(generator.scaleX, generator.scaleY, 0f);
+        newTrain.AddComponent<Train>();
         Vector3 position = trainPoints[0];
         // The start position of a train
         position = Vector3.zero + position;
@@ -83,10 +99,6 @@ public class Line : MonoBehaviour
         newTrain.name = this.name.ToString().Remove(5) + "->" + myTrainsTransform.childCount.ToString(); 
         // remove(5) because of pattern LineX, where X is from 1 to 6
         myTrainsList.Add(newTrain);
-        if (trainPoints.Length == 0)
-        {
-            Destroy(newTrain);
-        }
     }
     /// <summary>
     /// Scales a given position using specified scaling factors and offsets.

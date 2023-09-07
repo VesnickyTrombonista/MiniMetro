@@ -77,7 +77,7 @@ public class LinesDrawer : MonoBehaviour
     {
         Vector2 mousePosition = myCamera.ScreenToWorldPoint(Input.mousePosition);
 
-        // check if mousePos hits any collider with layer "CantDrawOver", if true cut the line by calling EndDraw( )
+        // check if mousePosition hits any collider with layer "CantDrawOver", if true cut the line by calling EndDraw( )
         RaycastHit2D hit = Physics2D.CircleCast(mousePosition, lineWidth / 3f, Vector2.zero, 1f, cantDrawOverLayerIndex);
 
         if (hit)

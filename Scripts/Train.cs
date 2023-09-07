@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Train : MonoBehaviour
@@ -9,11 +10,12 @@ public class Train : MonoBehaviour
     public string trainName;
 
     public Vector3[] linePoints;  // An array of Vector3 points that define the line
-    public float speed = 5.0f;    // The speed at which the GameObject moves
+    public float speed = 0.5f;    // The speed at which the GameObject moves
 
     private int currentPoint = 0; // because train starts at 0 position
-    private int maxPoint = 0;
+    public int maxPoint = 0;
     private bool directionForward = true;
+    public bool start = false;
 
     public float minimalDistance = 0.1f;
 
@@ -30,15 +32,18 @@ public class Train : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (start)
+        {
+            if (directionForward)
+            {
+                MoveForward();
+            }
+            if (!directionForward)
+            {
+                MoveBackward();
+            }
+        }
         
-        if (directionForward)
-        {
-            MoveForward();
-        }
-        if (!directionForward)
-        {
-            MoveBackward();
-        }
         
     }
 
@@ -48,7 +53,7 @@ public class Train : MonoBehaviour
     /// </summary>
     public void MoveForward()
     {
-        if (currentPoint < maxPoint)
+        if (currentPoint < maxPoint - 1)
         {
             // Move the GameObject towards the current point
             transform.position = Vector3.MoveTowards(transform.position, linePoints[currentPoint], speed * Time.deltaTime);
@@ -60,7 +65,7 @@ public class Train : MonoBehaviour
                 currentPoint++;
             }
         }
-        if (currentPoint == maxPoint) // max position, go back
+        if (currentPoint == maxPoint - 1) // max position, go back
         {
             directionForward = false;
         }
