@@ -80,16 +80,17 @@ public class Train : MonoBehaviour
     /// <param name="objectCollider">The Collider2D of the station where passengers are boarding.</param>
     public void Boarding(Collider2D objectCollider)
     {
-        while (trainRoom.Count < passengerCapacity)
+        if (objectCollider.GetComponent<Station>().passengerQueue.Count < 1)
         {
-            if (objectCollider.GetComponent<Station>().passengerQueue.Count > 1)
-            {
+            return;
+        }
+        while (trainRoom.Count < passengerCapacity && objectCollider.GetComponent<Station>().passengerQueue.Count > 0)
+        // enough space and people
+        {
+            trainRoom.Add(objectCollider.GetComponent<Station>().passengerQueue[0]);
+            objectCollider.GetComponent<Station>().passengerQueue.RemoveAt(0);
 
-                trainRoom.Add(objectCollider.GetComponent<Station>().passengerQueue[0]);
-                objectCollider.GetComponent<Station>().passengerQueue.RemoveAt(0);
-                passengerCount++;
-            }
-
+            passengerCount++;
         }
     }
     /// <summary>
@@ -102,12 +103,14 @@ public class Train : MonoBehaviour
         {
             return;
         }
-        foreach (GameObject passenger in trainRoom)
+        else
         {
+            GameObject passenger = trainRoom[0];
             if (passenger.GetComponent<Person>().personName == stationName)
             {
                 
                 trainRoom.Remove(passenger);
+                passenger.GetComponent<Person>().used = false;
                 int count;
                 bool parsing = Int32.TryParse(planner.totalPassengersCount.text, out count);
                 if (parsing)

@@ -29,7 +29,7 @@ public class TimePlanning : MonoBehaviour
 
     // for camera scrolling
     private bool scrollerIsUpdated = false;
-    private float weekDuration = 21f; //84f
+    private float weekDuration = 84f; //84f or 21f
     public float currentTimeInWeek;
     public float currentWeek = 0;
     private int firstFastPeriod = 5;
@@ -45,7 +45,7 @@ public class TimePlanning : MonoBehaviour
     // speed of people generating
     // floats because of dividing
     private float daysInWeek = 7;
-    private float peoplePerDay = 3;
+    private float peoplePerDay = 2; //3
 
     // camera sizes
     public float defaultCameraSize = 2f;
@@ -109,6 +109,10 @@ public class TimePlanning : MonoBehaviour
         if (criticalMode)
         {
             GameOverCountdown();
+            if (timeLeft < 0)
+            {
+                UnityEditor.EditorApplication.isPlaying = false;
+            }
         }
         
         // totalPassengersCount.text = AddTransportedPassenger(totalPassengersCount.text, stationsQueues);
@@ -336,7 +340,6 @@ public class TimePlanning : MonoBehaviour
         if (timeLeft < 0)
         {
             Application.Quit();
-            return;
         }
     }
 }
